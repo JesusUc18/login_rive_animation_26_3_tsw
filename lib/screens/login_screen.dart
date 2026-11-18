@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:login_rive_animation_26_3_tsw/screens/products_screen.dart';
+import 'package:login_rive_animation_26_3_tsw/screens/signup_screen.dart';
 import 'package:rive/rive.dart';
 
 import 'dart:async';
@@ -240,9 +241,16 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       const Text("Don't have an account?"),
                       TextButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const SignUpScreen(),
+                            ),
+                          );
+                        },
                         child: const Text(
-                          "register",
+                          "Sign up",
                           style: TextStyle(
                             color: Colors.blue,
                             fontWeight: FontWeight.bold,

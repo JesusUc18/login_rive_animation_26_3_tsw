@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:login_rive_animation_26_3_tsw/screens/products_screen.dart';
 import 'package:rive/rive.dart';
 
 import 'dart:async';
@@ -28,40 +30,31 @@ class _LoginScreenState extends State<LoginScreen> {
   final emailCtrl = TextEditingController();
   final passwordCtrl = TextEditingController();
 
-  //4.2 Errores para mostrarlo en la UI
-  String? emailError;
-  String? passError;
-
-  //5.2 Variable para mostrar el CircularProgressIndicator mientras carga
+  // Variable para mostrar el CircularProgressIndicator mientras carga
   bool _isLoading = false;
 
-  // 4.3 Validadores
-  bool isValidEmail(String email) {
-    final re = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
-    return re.hasMatch(email);
+  // OWASP A07:2021: un único mensaje genérico, sin revelar qué campo falló
+  static const String _genericError =
+      'Credenciales inválidas. Verifica tu correo y contraseña.';
+
+  void _showGlobalError() {
+    _trigFail?.fire();
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(
+          content: Text(_genericError),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
   }
 
-  bool isValidPassword(String pass) {
-    // mínimo 8, una mayúscula, una minúscula, un dígito y un especial
-    final re = RegExp(
-      r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$',
-    );
-    return re.hasMatch(pass);
-  }
-
-  //4.4 Dar acción al botón
-  //5.3 Convertir _onLogin en asíncrono (Future<void> ... async)
   Future<void> _onLogin() async {
+    if (_isLoading) return;
+
     final email = emailCtrl.text.trim();
     final pass = passwordCtrl.text;
-
-    final emailTypeError = isValidEmail(email) ? null : 'Email inválido';
-    final passTypeError = isValidPassword(pass) ? null : 'Contraseña inválida';
-
-    setState(() {
-      emailError = emailTypeError;
-      passError = passTypeError;
-    });
 
     FocusScope.of(context).unfocus();
     _typingDebounce?.cancel();
@@ -69,10 +62,34 @@ class _LoginScreenState extends State<LoginScreen> {
     _isHandsUp?.change(false);
     _numLook?.value = 50.0;
 
-    if (emailTypeError == null && passTypeError == null) {
+    // Solo se valida que los campos no estén vacíos
+    if (email.isEmpty || pass.isEmpty) {
+      _showGlobalError();
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: pass,
+      );
+
       _trigSuccess?.fire();
-    } else {
-      _trigFail?.fire();
+      // Esperar a que termine la animación de éxito antes de navegar
+      await Future.delayed(const Duration(seconds: 2));
+      if (!mounted) return;
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const ProductsScreen()),
+      );
+    } catch (_) {
+      // Cualquier fallo (credenciales, usuario inexistente, red) usa el mismo mensaje
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      _showGlobalError();
     }
   }
 
@@ -148,7 +165,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
-                    errorText: emailError,
                     hintText: "email@ejemplo.com",
                     prefixIcon: const Icon(Icons.email),
                     border: OutlineInputBorder(
@@ -200,12 +216,22 @@ class _LoginScreenState extends State<LoginScreen> {
                   minWidth: size.width,
                   height: 50,
                   color: Colors.blue,
+                  disabledColor: Colors.blue.shade300,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                   textColor: Colors.white,
-                  child: const Text("Iniciar sesión"),
-                  onPressed: _onLogin,
+                  onPressed: _isLoading ? null : _onLogin,
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 22,
+                          width: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text("Iniciar sesión"),
                 ),
                 const SizedBox(height: 20),
                 SizedBox(

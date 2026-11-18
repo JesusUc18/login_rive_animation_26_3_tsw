@@ -28,8 +28,12 @@ class _LoginScreenState extends State<LoginScreen> {
   final emailCtrl = TextEditingController();
   final passwordCtrl = TextEditingController();
 
+  //4.2 Errores para mostrarlo en la UI
   String? emailError;
   String? passError;
+
+  //5.2 Variable para mostrar el CircularProgressIndicator mientras carga
+  bool _isLoading = false;
 
   // 4.3 Validadores
   bool isValidEmail(String email) {
@@ -45,7 +49,9 @@ class _LoginScreenState extends State<LoginScreen> {
     return re.hasMatch(pass);
   }
 
-  void _onLogin() {
+  //4.4 Dar acción al botón
+  //5.3 Convertir _onLogin en asíncrono (Future<void> ... async)
+  Future<void> _onLogin() async {
     final email = emailCtrl.text.trim();
     final pass = passwordCtrl.text;
 

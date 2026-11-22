@@ -1,6 +1,9 @@
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
+import 'package:login_rive_animation_26_3_tsw/screens/login_screen.dart';
 
 // Pantalla de productos (consume la API de Spring Boot)
 class ProductsScreen extends StatelessWidget {
@@ -23,10 +26,30 @@ class ProductsScreen extends StatelessWidget {
     }
   }
 
+  // Cerrar sesión en Firebase y volver al Login sin permitir regresar con "atrás"
+  Future<void> _onLogout(BuildContext context) async {
+    await FirebaseAuth.instance.signOut();
+    if (!context.mounted) return;
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (_) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Productos de Spring Boot')),
+      appBar: AppBar(
+        title: const Text('Productos de Spring Boot'),
+        actions: [
+          IconButton(
+            tooltip: 'Cerrar sesión',
+            icon: const Icon(Icons.logout),
+            onPressed: () => _onLogout(context),
+          ),
+        ],
+      ),
       // 6.3 FutureBuilder: espera la respuesta de la API y dibuja el resultado
       body: FutureBuilder<List<dynamic>>(
         future: fetchProducts(),

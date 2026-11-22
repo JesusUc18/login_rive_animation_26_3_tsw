@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:login_rive_animation_26_3_tsw/screens/products_screen.dart';
 import 'package:login_rive_animation_26_3_tsw/screens/signup_screen.dart';
+import 'package:login_rive_animation_26_3_tsw/widgets/forgot_password_dialog.dart';
 import 'package:rive/rive.dart';
 
 import 'dart:async';
@@ -92,6 +93,28 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => _isLoading = false);
       _showGlobalError();
     }
+  }
+
+  Future<void> _onForgotPassword() async {
+    FocusScope.of(context).unfocus();
+    final sent = await showDialog<bool>(
+      context: context,
+      builder: (_) => ForgotPasswordDialog(initialEmail: emailCtrl.text.trim()),
+    );
+    if (sent != true || !mounted) return;
+
+    // Mensaje genérico: no confirma si el correo está registrado (OWASP)
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Si el correo está registrado, recibirás un enlace para restablecer tu contraseña.',
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
   }
 
   @override
@@ -204,7 +227,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
-                SizedBox(height: 10),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: _isLoading ? null : _onForgotPassword,
+                    child: const Text('¿Olvidaste tu contraseña?'),
+                  ),
+                ),
                 SizedBox(
                   width: size.width,
                   child: const Text(

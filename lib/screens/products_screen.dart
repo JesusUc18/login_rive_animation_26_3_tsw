@@ -13,7 +13,7 @@ class ProductsScreen extends StatelessWidget {
   // - Web / iOS Simulator / macOS: usar http://localhost:8090
   // - Emulador Android: cambiar localhost por 10.0.2.2 (http://10.0.2.2:8090)
   // - Celular físico: usar la IP de tu computadora (ej. http://192.168.1.X:8090)
-  static const String baseUrl = 'http://localhost:8090';
+  static const String baseUrl = 'http://10.0.2.2:8090';
 
   // 6.2 Función para pedir la lista de productos al endpoint GET /products
   Future<List<dynamic>> fetchProducts() async {
@@ -71,9 +71,16 @@ class ProductsScreen extends StatelessWidget {
             itemCount: products.length,
             itemBuilder: (context, index) {
               final product = products[index];
+              // La categoría viene anidada: product['category']['category']
+              final category =
+                  product['category']?['category']?.toString() ??
+                  'Sin categoría';
               return ListTile(
                 title: Text(product['name'].toString()),
-                subtitle: Text('Stock: ${product['stock']}'),
+                subtitle: Text(
+                  'Categoría: $category\nStock: ${product['stock']}',
+                ),
+                isThreeLine: true,
                 trailing: Text('\$${product['price']}'),
               );
             },

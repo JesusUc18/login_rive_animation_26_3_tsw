@@ -10,10 +10,12 @@ class ProductsScreen extends StatelessWidget {
   const ProductsScreen({super.key});
 
   // 6.1 Parámetro clave: URL base de la API de Spring Boot (puerto 8090)
-  // - Web / iOS Simulator / macOS: usar http://localhost:8090
-  // - Emulador Android: cambiar localhost por 10.0.2.2 (http://10.0.2.2:8090)
-  // - Celular físico: usar la IP de tu computadora (ej. http://192.168.1.X:8090)
-  static const String baseUrl = 'http://10.0.2.2:8090';
+  // - Web / iOS Simulator / macOS: localhost apunta directo a la computadora
+  // - Android (celular por USB o emulador): ejecutar antes en la laptop
+  //     adb reverse tcp:8090 tcp:8090
+  //   para que localhost:8090 del dispositivo se redirija a la laptop.
+  //   Hay que repetirlo si se desconecta el cable o se reinicia adb.
+  static const String baseUrl = 'http://localhost:8090';
 
   // 6.2 Función para pedir la lista de productos al endpoint GET /products
   Future<List<dynamic>> fetchProducts() async {

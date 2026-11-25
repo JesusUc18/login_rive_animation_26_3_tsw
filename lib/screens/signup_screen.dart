@@ -1,5 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:login_rive_animation_26_3_tsw/theme/app_theme.dart';
+import 'package:login_rive_animation_26_3_tsw/theme/theme_controller.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -85,10 +87,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Cuenta creada correctamente. Inicia sesión.'),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
+        SnackBar(
+          content: const Text('Cuenta creada correctamente. Inicia sesión.'),
+          backgroundColor: AppTheme.success(context),
         ),
       );
       Navigator.pop(context);
@@ -109,8 +110,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
           default:
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(e.message ?? 'No se pudo crear la cuenta'),
-                backgroundColor: Colors.red,
+                content: const Text(
+                  'No se pudo crear la cuenta. Intenta de nuevo.',
+                ),
+                backgroundColor: Theme.of(context).colorScheme.error,
               ),
             );
         }
@@ -119,32 +122,32 @@ class _SignUpScreenState extends State<SignUpScreen> {
       if (!mounted) return;
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Error inesperado. Intenta de nuevo.'),
-          backgroundColor: Colors.red,
+        SnackBar(
+          content: const Text('Error inesperado. Intenta de nuevo.'),
+          backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
     }
   }
 
   Widget _rule(String text, bool ok) {
+    final scheme = Theme.of(context).colorScheme;
+    final color = ok ? AppTheme.success(context) : scheme.onSurfaceVariant;
     return Padding(
-      padding: const EdgeInsets.only(top: 2),
+      padding: const EdgeInsets.only(top: 4),
       child: Row(
         children: [
-          Icon(
-            ok ? Icons.check_circle : Icons.radio_button_unchecked,
-            size: 16,
-            color: ok ? Colors.green : Colors.grey,
-          ),
-          const SizedBox(width: 6),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 12,
-              color: ok ? Colors.green : Colors.grey.shade700,
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            child: Icon(
+              ok ? Icons.check_circle_rounded : Icons.radio_button_unchecked,
+              key: ValueKey(ok),
+              size: 18,
+              color: color,
             ),
           ),
+          const SizedBox(width: 8),
+          Text(text, style: TextStyle(fontSize: 13, color: color)),
         ],
       ),
     );
@@ -152,99 +155,172 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final pass = _passCtrl.text;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Crear cuenta')),
+      appBar: AppBar(
+        title: const Text('Crear cuenta'),
+        actions: const [ThemeToggleButton()],
+      ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextField(
-                controller: _emailCtrl,
-                keyboardType: TextInputType.emailAddress,
-                decoration: InputDecoration(
-                  hintText: 'usuario$_domain',
-                  errorText: _emailError,
-                  prefixIcon: const Icon(Icons.email),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _passCtrl,
-                obscureText: _obscurePass,
-                onChanged: (_) => setState(() {}),
-                decoration: InputDecoration(
-                  hintText: 'Contraseña',
-                  errorText: _passError,
-                  prefixIcon: const Icon(Icons.lock),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePass ? Icons.visibility : Icons.visibility_off,
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 460),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        color: scheme.primaryContainer,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.person_add_alt_1_rounded,
+                        size: 40,
+                        color: scheme.onPrimaryContainer,
+                      ),
                     ),
-                    onPressed: () =>
-                        setState(() => _obscurePass = !_obscurePass),
                   ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _confirmCtrl,
-                obscureText: _obscureConfirm,
-                decoration: InputDecoration(
-                  hintText: 'Confirmar contraseña',
-                  errorText: _confirmError,
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscureConfirm ? Icons.visibility : Icons.visibility_off,
+                  const SizedBox(height: 16),
+                  Text(
+                    'Únete con tu correo institucional',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
                     ),
-                    onPressed: () =>
-                        setState(() => _obscureConfirm = !_obscureConfirm),
                   ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Solo se aceptan cuentas $_domain',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              _rule('Mínimo 8 caracteres', _hasMinLength(pass)),
-              _rule('Una letra mayúscula', _hasUpper(pass)),
-              _rule('Una letra minúscula', _hasLower(pass)),
-              _rule('Un número', _hasNumber(pass)),
-              _rule('Un símbolo (!@#\$%...)', _hasSymbol(pass)),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: MaterialButton(
-                  height: 50,
-                  color: Colors.blue,
-                  disabledColor: Colors.blue.shade300,
-                  textColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                  const SizedBox(height: 24),
+                  TextField(
+                    controller: _emailCtrl,
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
+                    decoration: InputDecoration(
+                      labelText: 'Correo institucional',
+                      hintText: 'usuario$_domain',
+                      errorText: _emailError,
+                      prefixIcon: const Icon(Icons.email_outlined),
+                    ),
                   ),
-                  onPressed: _isLoading ? null : _onSignUp,
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 22,
-                          width: 22,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.5,
-                            color: Colors.white,
+                  const SizedBox(height: 14),
+                  TextField(
+                    controller: _passCtrl,
+                    obscureText: _obscurePass,
+                    textInputAction: TextInputAction.next,
+                    onChanged: (_) => setState(() {}),
+                    decoration: InputDecoration(
+                      labelText: 'Contraseña',
+                      errorText: _passError,
+                      prefixIcon: const Icon(Icons.lock_outline_rounded),
+                      suffixIcon: IconButton(
+                        tooltip: _obscurePass
+                            ? 'Mostrar contraseña'
+                            : 'Ocultar contraseña',
+                        icon: Icon(
+                          _obscurePass
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                        ),
+                        onPressed: () =>
+                            setState(() => _obscurePass = !_obscurePass),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  TextField(
+                    controller: _confirmCtrl,
+                    obscureText: _obscureConfirm,
+                    onSubmitted: (_) => _onSignUp(),
+                    decoration: InputDecoration(
+                      labelText: 'Confirmar contraseña',
+                      errorText: _confirmError,
+                      prefixIcon: const Icon(Icons.lock_reset_rounded),
+                      suffixIcon: IconButton(
+                        tooltip: _obscureConfirm
+                            ? 'Mostrar contraseña'
+                            : 'Ocultar contraseña',
+                        icon: Icon(
+                          _obscureConfirm
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                        ),
+                        onPressed: () =>
+                            setState(() => _obscureConfirm = !_obscureConfirm),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  // Reglas de la contraseña en una tarjeta suave
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
+                    decoration: BoxDecoration(
+                      color: scheme.primaryContainer.withValues(alpha: 0.45),
+                      borderRadius: AppTheme.radius,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Tu contraseña debe tener:',
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
                           ),
-                        )
-                      : const Text('Registrarme'),
-                ),
+                        ),
+                        const SizedBox(height: 4),
+                        _rule('Mínimo 8 caracteres', _hasMinLength(pass)),
+                        _rule('Una letra mayúscula', _hasUpper(pass)),
+                        _rule('Una letra minúscula', _hasLower(pass)),
+                        _rule('Un número', _hasNumber(pass)),
+                        _rule('Un símbolo (!@#\$%...)', _hasSymbol(pass)),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 22),
+                  FilledButton(
+                    onPressed: _isLoading ? null : _onSignUp,
+                    child: _isLoading
+                        ? SizedBox(
+                            height: 22,
+                            width: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              color: scheme.primary,
+                            ),
+                          )
+                        : const Text('Registrarme'),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        '¿Ya tienes cuenta?',
+                        style: TextStyle(color: scheme.onSurfaceVariant),
+                      ),
+                      TextButton(
+                        onPressed: _isLoading
+                            ? null
+                            : () => Navigator.pop(context),
+                        child: const Text('Inicia sesión'),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),

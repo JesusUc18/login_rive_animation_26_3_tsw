@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:login_rive_animation_26_3_tsw/screens/products_screen.dart';
 import 'package:login_rive_animation_26_3_tsw/screens/signup_screen.dart';
+import 'package:login_rive_animation_26_3_tsw/theme/app_theme.dart';
+import 'package:login_rive_animation_26_3_tsw/theme/theme_controller.dart';
 import 'package:login_rive_animation_26_3_tsw/widgets/forgot_password_dialog.dart';
 import 'package:rive/rive.dart';
 
@@ -41,13 +43,24 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _showGlobalError() {
     _trigFail?.fire();
+    final scheme = Theme.of(context).colorScheme;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
-        const SnackBar(
-          content: Text(_genericError),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.error_outline_rounded, color: scheme.onError),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  _genericError,
+                  style: TextStyle(color: scheme.onError),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: scheme.error,
         ),
       );
   }
@@ -107,12 +120,11 @@ class _LoginScreenState extends State<LoginScreen> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
-        const SnackBar(
-          content: Text(
+        SnackBar(
+          content: const Text(
             'Si el correo está registrado, recibirás un enlace para restablecer tu contraseña.',
           ),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
+          backgroundColor: AppTheme.success(context),
         ),
       );
   }
@@ -136,139 +148,166 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final Size size = MediaQuery.of(context).size;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      body: SingleChildScrollView(
-        child: SafeArea(
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20.0),
-            child: Column(
-              children: [
-                SizedBox(
-                  width: size.width,
-                  height: 200,
-                  child: RiveAnimation.asset(
-                    'assets/login-bear-animation.riv',
-                    stateMachines: ['Login Machine'],
-                    onInit: (artboard) {
-                      _controller = StateMachineController.fromArtboard(
-                        artboard,
-                        'Login Machine',
-                      );
-                      if (_controller == null) return;
-                      artboard.addController(_controller!);
-                      _isChecking = _controller?.findSMI('isChecking');
-                      _isHandsUp = _controller?.findSMI('isHandsUp');
-                      _trigSuccess = _controller?.findSMI('trigSuccess');
-                      _trigFail = _controller?.findSMI('trigFail');
-                      _numLook = _controller?.findSMI('numLook');
-                    },
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 460),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Botón de modo día / noche
+                  const Align(
+                    alignment: Alignment.centerRight,
+                    child: ThemeToggleButton(),
                   ),
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: emailCtrl,
-                  focusNode: _emailFocusNode,
-                  onChanged: (value) {
-                    if (_isHandsUp != null) {
-                      //_isHandsUp!.change(false);
-                    }
-                    if (_isChecking != null) {
-                      _isChecking!.change(true);
-                      final look = (value.length / 70.0 * 100).clamp(
-                        0.0,
-                        100.0,
-                      );
-                      _numLook?.value = look;
-                      _typingDebounce?.cancel();
-                      _typingDebounce = Timer(const Duration(seconds: 3), () {
-                        if (!mounted) return;
-                        _isChecking?.change(false);
-                      });
-                    }
-                  },
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: InputDecoration(
-                    hintText: "email@ejemplo.com",
-                    prefixIcon: const Icon(Icons.email),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: passwordCtrl,
-                  focusNode: _passwordFocusNode,
-                  onChanged: (value) {
-                    if (_isHandsUp != null) {
-                      _isHandsUp!.change(true);
-                    }
-                    if (_isChecking != null) {
-                      //_isChecking!.change(false);
-                    }
-                  },
-                  obscureText: _isObscure,
-                  decoration: InputDecoration(
-                    hintText: "Password",
-                    prefixIcon: const Icon(Icons.lock),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _isObscure ? Icons.visibility : Icons.visibility_off,
+
+                  // Oso dentro de una tarjeta redondeada azul pastel
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(28),
+                    child: Container(
+                      height: 230,
+                      color: isDark
+                          ? AppTheme.pastelBlueDeep
+                          : AppTheme.pastelBlue,
+                      child: RiveAnimation.asset(
+                        'assets/login-bear-animation.riv',
+                        stateMachines: const ['Login Machine'],
+                        fit: BoxFit.cover,
+                        onInit: (artboard) {
+                          _controller = StateMachineController.fromArtboard(
+                            artboard,
+                            'Login Machine',
+                          );
+                          if (_controller == null) return;
+                          artboard.addController(_controller!);
+                          _isChecking = _controller?.findSMI('isChecking');
+                          _isHandsUp = _controller?.findSMI('isHandsUp');
+                          _trigSuccess = _controller?.findSMI('trigSuccess');
+                          _trigFail = _controller?.findSMI('trigFail');
+                          _numLook = _controller?.findSMI('numLook');
+                        },
                       ),
-                      onPressed: () {
-                        setState(() {
-                          _isObscure = !_isObscure;
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  Text(
+                    '¡Bienvenido de vuelta!',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: scheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Inicia sesión para ver el catálogo',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  TextField(
+                    controller: emailCtrl,
+                    focusNode: _emailFocusNode,
+                    onChanged: (value) {
+                      if (_isChecking != null) {
+                        _isChecking!.change(true);
+                        final look = (value.length / 70.0 * 100).clamp(
+                          0.0,
+                          100.0,
+                        );
+                        _numLook?.value = look;
+                        _typingDebounce?.cancel();
+                        _typingDebounce = Timer(const Duration(seconds: 3), () {
+                          if (!mounted) return;
+                          _isChecking?.change(false);
                         });
-                      },
+                      }
+                    },
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
+                    decoration: const InputDecoration(
+                      labelText: 'Correo electrónico',
+                      hintText: 'correo@ejemplo.com',
+                      prefixIcon: Icon(Icons.email_outlined),
                     ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                  ),
+                  const SizedBox(height: 14),
+                  TextField(
+                    controller: passwordCtrl,
+                    focusNode: _passwordFocusNode,
+                    onChanged: (value) {
+                      _isHandsUp?.change(true);
+                    },
+                    onSubmitted: (_) => _onLogin(),
+                    obscureText: _isObscure,
+                    decoration: InputDecoration(
+                      labelText: 'Contraseña',
+                      prefixIcon: const Icon(Icons.lock_outline_rounded),
+                      suffixIcon: IconButton(
+                        tooltip: _isObscure
+                            ? 'Mostrar contraseña'
+                            : 'Ocultar contraseña',
+                        icon: Icon(
+                          _isObscure
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _isObscure = !_isObscure;
+                          });
+                        },
+                      ),
                     ),
                   ),
-                ),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: _isLoading ? null : _onForgotPassword,
-                    child: const Text('¿Olvidaste tu contraseña?'),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: _isLoading ? null : _onForgotPassword,
+                      child: const Text('¿Olvidaste tu contraseña?'),
+                    ),
                   ),
-                ),
-                SizedBox(
-                  width: size.width,
-                  child: const Text(
-                    "Al iniciar sesión, aceptas nuestras políticas de privacidad y términos de servicio.",
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  const SizedBox(height: 4),
+                  FilledButton(
+                    onPressed: _isLoading ? null : _onLogin,
+                    child: _isLoading
+                        ? SizedBox(
+                            height: 22,
+                            width: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              color: scheme.primary,
+                            ),
+                          )
+                        : const Text('Iniciar sesión'),
                   ),
-                ),
-                const SizedBox(height: 10),
-                MaterialButton(
-                  minWidth: size.width,
-                  height: 50,
-                  color: Colors.blue,
-                  disabledColor: Colors.blue.shade300,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Al iniciar sesión, aceptas nuestras políticas de privacidad y términos de servicio.',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
                   ),
-                  textColor: Colors.white,
-                  onPressed: _isLoading ? null : _onLogin,
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 22,
-                          width: 22,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.5,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Text("Iniciar sesión"),
-                ),
-                const SizedBox(height: 20),
-                SizedBox(
-                  width: size.width,
-                  child: Row(
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text("Don't have an account?"),
+                      Text(
+                        '¿No tienes cuenta?',
+                        style: TextStyle(color: scheme.onSurfaceVariant),
+                      ),
                       TextButton(
                         onPressed: () {
                           Navigator.push(
@@ -278,18 +317,12 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           );
                         },
-                        child: const Text(
-                          "Sign up",
-                          style: TextStyle(
-                            color: Colors.blue,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        child: const Text('Regístrate'),
                       ),
                     ],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

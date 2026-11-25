@@ -62,7 +62,9 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return AlertDialog(
+      icon: Icon(Icons.mark_email_unread_outlined, color: scheme.primary),
       title: const Text('Recuperar contraseña'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
@@ -77,12 +79,10 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
             keyboardType: TextInputType.emailAddress,
             onSubmitted: (_) => _onSend(),
             decoration: InputDecoration(
-              hintText: 'email@ejemplo.com',
+              labelText: 'Correo electrónico',
+              hintText: 'correo@ejemplo.com',
               errorText: _error,
-              prefixIcon: const Icon(Icons.email),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+              prefixIcon: const Icon(Icons.email_outlined),
             ),
           ),
         ],
@@ -93,15 +93,13 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
           child: const Text('Cancelar'),
         ),
         FilledButton(
+          style: FilledButton.styleFrom(minimumSize: const Size(110, 44)),
           onPressed: _isLoading ? null : _onSend,
           child: _isLoading
               ? const SizedBox(
                   height: 18,
                   width: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
+                  child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : const Text('Enviar'),
         ),
